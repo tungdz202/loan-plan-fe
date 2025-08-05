@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import InputForm from '../../components/input-table/InputFormTable';
 import SummaryBox from '../../components/summary-box/SummaryBox';
 import ResultTable from '../../components/result-table/ResultTable';
-import {calculateInterest} from "../../service/HomeService";
-import {Link} from "react-router-dom";
-import LoanTrackingModal from "../../components/loan-detail/LoanDetail";
-import {saveLoanContract} from "../../service/LoanDetailService";
+import { calculateInterest } from '../../service/HomeService';
+import { Link } from 'react-router-dom';
+import LoanTrackingModal from '../../components/loan-detail/LoanDetail';
+import { saveLoanContract } from '../../service/LoanDetailService';
 
 interface PaymentRow {
     period: string;
@@ -13,6 +14,8 @@ interface PaymentRow {
     principal: number;
     total: number;
     remainingBalance: number;
+    paymentDate: string;
+    paymentStatus: string;
 }
 
 interface Summary {
@@ -27,6 +30,7 @@ interface FormData {
     loanTerm: number;
     interestMethod: string;
     customerType: string;
+    startDate: string;
 }
 
 interface LoanContractInput {
@@ -41,16 +45,17 @@ const Home: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [showModal, setShowModal] = useState<boolean>(false);
-
+    const [startDate, setStartDate] = useState<string>('');
+    const navigate = useNavigate();
 
     const handleCalculate = async (formData: FormData) => {
         setLoading(true);
         setError(null);
-
         try {
             const response = await calculateInterest(formData);
             setSummary(response.summary);
             setResultData(response.data);
+            setStartDate(formData.startDate);
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -59,23 +64,29 @@ const Home: React.FC = () => {
     };
 
     const handleSaveContract = async (contract: LoanContractInput) => {
-        await saveLoanContract(contract);
+        try {
+            await saveLoanContract(contract);
+            setShowModal(false);
+            navigate('/loan-tracking', { state: { email: contract.email } });
+        } catch (err: any) {
+            setError(err.message || 'Lỗi khi lưu hợp đồng.');
+        }
     };
-
 
     return (
         <div className="container py-5">
+            <h1 className="text-center mb-4">Tính toán lãi vay</h1>
             <InputForm onCalculate={handleCalculate} />
-            <div className="mb-4">
-                <button className="btn btn-success me-2" onClick={() => setShowModal(true)}>
+            <div className="action-buttons">
+                <button className="btn btn-primary btn-custom" onClick={() => setShowModal(true)}>
                     Theo dõi hợp đồng
                 </button>
-                <Link to="/loan-tracking" className="btn btn-info">Xem danh sách hợp đồng</Link>
+                <Link to="/loan-tracking" className="btn btn-secondary btn-custom">Xem danh sách hợp đồng</Link>
             </div>
             {loading && <div className="alert alert-info">Đang tải...</div>}
             {error && <div className="alert alert-danger">{error}</div>}
-            <SummaryBox summary={summary} />
-            <ResultTable data={resultData} />
+            {summary && <SummaryBox summary={summary} />}
+            {resultData.length > 0 && <ResultTable data={resultData} startDate={startDate} />}
             <LoanTrackingModal
                 show={showModal}
                 onClose={() => setShowModal(false)}

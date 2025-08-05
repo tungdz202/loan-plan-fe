@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import SummaryBox from "../../components/summary-box/SummaryBox";
-import ResultTableDetail from "../../components/result-table/ResultTableDetail";
-import {getLoanContractById} from "../../service/LoanDetailService";
 import {LoanContract} from "../../types/common";
+import {getLoanContractById} from "../../service/LoanDetailService";
+import SummaryBox from "../../components/summary-box/SummaryBox";
+import ResultTable from "../../components/result-table/ResultTable";
 
 const LoanTrackingDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -12,12 +12,22 @@ const LoanTrackingDetail: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     const fetchContract = async () => {
+        if (!id || isNaN(parseInt(id))) {
+            setError('ID hợp đồng không hợp lệ.');
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
+        setError(null);
         try {
-            const selectedContract = await getLoanContractById(parseInt(id || '0'));
+            const selectedContract = await getLoanContractById(parseInt(id));
+            if (!selectedContract) {
+                throw new Error('Không tìm thấy hợp đồng.');
+            }
             setContract(selectedContract);
         } catch (err: any) {
-            setError(err.message);
+            setError(err.message || 'Lỗi khi tải hợp đồng.');
         } finally {
             setLoading(false);
         }
@@ -30,22 +40,33 @@ const LoanTrackingDetail: React.FC = () => {
     return (
         <div className="container py-5">
             <h1 className="text-center mb-4">Chi tiết hợp đồng vay</h1>
-            <Link to="/loan-tracking" className="btn btn-primary mb-4">Quay lại danh sách hợp đồng</Link>
+            <div className="action-buttons">
+                <Link to="/loan-tracking" className="btn btn-secondary btn-custom">Quay lại danh sách hợp đồng</Link>
+            </div>
             {loading && <div className="alert alert-info">Đang tải...</div>}
             {error && <div className="alert alert-danger">{error}</div>}
             {contract && (
                 <>
-                    <div className="card p-3 mb-4">
+                    <div className="card p-4 mb-4 contract-info">
                         <h3 className="card-title mb-3">Thông tin hợp đồng</h3>
-                        <p><strong>Email:</strong> {contract.email}</p>
-                        <p><strong>Tên hợp đồng:</strong> {contract.contractName}</p>
-                        <p><strong>Thời gian bắt đầu:</strong> {contract.startDate}</p>
-                        <p><strong>Kỳ hạn trả lãi:</strong> {contract.interestPeriod === 1 ? 'Hàng tháng' : contract.interestPeriod === 3 ? 'Hàng quý' : 'Hàng năm'}</p>
+                        <p>
+                            <strong>Email:</strong> {contract.email}
+                        </p>
+                        <p>
+                            <strong>Tên hợp đồng:</strong> {contract.contractName}
+                        </p>
+                        <p>
+                            <strong>Thời gian bắt đầu:</strong> {contract.startDate}
+                        </p>
+                        <p>
+                            <strong>Kỳ hạn trả lãi:</strong>
+                            {contract.interestPeriod === 1 ? 'Hàng tháng' : contract.interestPeriod === 3 ? 'Hàng quý' : 'Hàng năm'}
+                        </p>
                     </div>
                     {contract.loanDetails ? (
                         <>
                             <SummaryBox summary={contract.loanDetails.summary} />
-                            <ResultTableDetail data={contract.loanDetails.data} contractId={contract.id} onStatusChange={fetchContract} />
+                            <ResultTable data={contract.loanDetails.data} contractId={contract.id} onStatusChange={fetchContract} />
                         </>
                     ) : (
                         <div className="alert alert-warning">Không có chi tiết hợp đồng.</div>

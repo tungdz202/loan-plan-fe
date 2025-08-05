@@ -7,17 +7,24 @@ interface Summary {
 }
 
 interface Props {
-    summary: Summary | null;
+    summary: Summary;
 }
 
 const SummaryBox: React.FC<Props> = ({ summary }) => {
-    if (!summary) return null;
     return (
-        <div className="card p-3 mb-4">
-            <h3 className="card-title mb-3">Tổng hợp</h3>
-            <p><strong>Tổng số tiền gốc:</strong> {summary.totalPrincipal.toLocaleString()} VNĐ</p>
-            <p><strong>Tổng số tiền lãi:</strong> {summary.totalInterest.toLocaleString()} VNĐ</p>
-            <p><strong>Tổng số tiền phải nộp:</strong> {summary.totalPayment.toLocaleString()} VNĐ</p>
+        <div className="summary-box mb-4">
+            <div className="summary-item">
+                <h4>Tổng số tiền gốc</h4>
+                <p>{summary.totalPrincipal.toLocaleString()} VNĐ</p>
+            </div>
+            <div className="summary-item">
+                <h4>Tổng số tiền lãi</h4>
+                <p>{summary.totalInterest.toLocaleString()} VNĐ</p>
+            </div>
+            <div className="summary-item">
+                <h4>Tổng số tiền phải nộp</h4>
+                <p>{summary.totalPayment.toLocaleString()} VNĐ</p>
+            </div>
         </div>
     );
 };

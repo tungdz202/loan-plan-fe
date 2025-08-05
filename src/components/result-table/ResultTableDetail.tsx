@@ -1,15 +1,15 @@
 import React from 'react';
-import {PaymentRow} from "../../types/common";
 import {updatePaymentStatus} from "../../service/LoanDetailService";
+import {PaymentRow} from "../../types/common";
 
 interface Props {
     data: PaymentRow[];
     contractId?: number;
-    onStatusChange?: () => void; // Callback để reload dữ liệu
+    onStatusChange?: () => void;
 }
 
 const ResultTable: React.FC<Props> = ({ data, contractId, onStatusChange }) => {
-    const currentDate = new Date('2025-08-03'); // Ngày hiện tại: 03/08/2025
+    const currentDate = new Date('2025-08-03');
 
     const handleToggleStatus = async (index: number, currentStatus: string) => {
         if (contractId) {
@@ -17,7 +17,7 @@ const ResultTable: React.FC<Props> = ({ data, contractId, onStatusChange }) => {
                 const newStatus = currentStatus === 'Đã trả' ? 'Chưa trả' : 'Đã trả';
                 await updatePaymentStatus(contractId, index, newStatus);
                 if (onStatusChange) {
-                    onStatusChange(); // Gọi callback để reload dữ liệu
+                    onStatusChange();
                 }
             } catch (err: any) {
                 console.error('Lỗi khi cập nhật trạng thái:', err.message);
@@ -26,7 +26,7 @@ const ResultTable: React.FC<Props> = ({ data, contractId, onStatusChange }) => {
     };
 
     return (
-        <div className="card p-3">
+        <div className="card p-3 table-container">
             <h3 className="card-title mb-3">Kế hoạch trả lãi</h3>
             <table className="table table-bordered">
                 <thead>
@@ -52,7 +52,7 @@ const ResultTable: React.FC<Props> = ({ data, contractId, onStatusChange }) => {
                             <td>{row.principal.toLocaleString()}</td>
                             <td>{row.total.toLocaleString()}</td>
                             <td>{row.remainingBalance.toLocaleString()}</td>
-                            <td>
+                            <td className="status-checkbox">
                                 <input
                                     type="checkbox"
                                     checked={row.paymentStatus === 'Đã trả'}

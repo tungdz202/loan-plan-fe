@@ -1,18 +1,4 @@
-import { ApiService } from './ApiService';
-
-interface PaymentRow {
-    period: string;
-    interest: number;
-    principal: number;
-    total: number;
-    remainingBalance: number;
-}
-
-interface Summary {
-    totalPrincipal: number;
-    totalInterest: number;
-    totalPayment: number;
-}
+import {PaymentRow} from "../types/common";
 
 interface FormData {
     amount: number;
@@ -20,112 +6,61 @@ interface FormData {
     loanTerm: number;
     interestMethod: string;
     customerType: string;
+    startDate: string;
 }
 
-interface ApiResponse {
-    summary: Summary;
+interface CalculateResponse {
+    summary: {
+        totalPrincipal: number;
+        totalInterest: number;
+        totalPayment: number;
+    };
     data: PaymentRow[];
 }
 
-export const calculateInterest = async (formData: FormData): Promise<ApiResponse> => {
-    // return ApiService<ApiResponse>({
-    //     url: '/api/calculate-interest',
-    //     method: 'POST',
-    //     body: formData,
-    // });
-    return Promise.resolve(mockData);
-};
+export const calculateInterest = async (formData: FormData): Promise<CalculateResponse> => {
+    const { amount, interestPeriod, loanTerm, interestMethod, startDate } = formData;
+    const annualRate = formData.customerType === 'individual' ? 0.06 : 0.08; // 6% cá nhân, 8% doanh nghiệp
+    const monthlyRate = annualRate / 12;
 
-const mockData: ApiResponse = {
-    summary: {
-        totalPrincipal: 100000000,
-        totalInterest: 4595860,
-        totalPayment: 104595860
-    },
-    data: [
-        {
-            period: "Kỳ 1",
-            interest: 500000,
-            principal: 8216155,
-            total: 8716155,
-            remainingBalance: 91783845
+    const data: PaymentRow[] = [];
+    let remainingBalance = amount;
+    let totalInterest = 0;
+
+    const periods = Math.ceil(loanTerm / interestPeriod);
+    const monthlyPayment = interestMethod === 'fixed'
+        ? amount * (monthlyRate / (1 - Math.pow(1 + monthlyRate, -loanTerm)))
+        : amount / periods;
+
+    const start = new Date(startDate);
+    for (let i = 0; i < periods; i++) {
+        const interest = interestMethod === 'fixed' ? amount * monthlyRate : remainingBalance * monthlyRate;
+        const principal = interestMethod === 'fixed' ? monthlyPayment - interest : monthlyPayment;
+        const total = interest + principal;
+        remainingBalance -= principal;
+        if (remainingBalance < 0) remainingBalance = 0;
+
+        const paymentDate = new Date(start.getFullYear(), start.getMonth() + (i + 1) * interestPeriod, start.getDate()).toISOString().split('T')[0];
+        const paymentStatus = paymentDate <= '2025-08-03' ? 'Đã trả' : 'Chưa trả'; // Giả lập trạng thái
+
+        data.push({
+            period: `Kỳ ${i + 1}`,
+            interest: Math.round(interest),
+            principal: Math.round(principal),
+            total: Math.round(total),
+            remainingBalance: Math.round(remainingBalance),
+            paymentDate,
+            paymentStatus,
+        });
+        totalInterest += interest;
+    }
+
+    return {
+        summary: {
+            totalPrincipal: amount,
+            totalInterest: Math.round(totalInterest),
+            totalPayment: Math.round(amount + totalInterest),
         },
-        {
-            period: "Kỳ 2",
-            interest: 458919,
-            principal: 8257236,
-            total: 8716155,
-            remainingBalance: 83526609
-        },
-        {
-            period: "Kỳ 3",
-            interest: 417633,
-            principal: 8298522,
-            total: 8716155,
-            remainingBalance: 75228087
-        },
-        {
-            period: "Kỳ 4",
-            interest: 376140,
-            principal: 8340015,
-            total: 8716155,
-            remainingBalance: 66888072
-        },
-        {
-            period: "Kỳ 5",
-            interest: 334440,
-            principal: 8381715,
-            total: 8716155,
-            remainingBalance: 58506357
-        },
-        {
-            period: "Kỳ 6",
-            interest: 292532,
-            principal: 8423623,
-            total: 8716155,
-            remainingBalance: 50082734
-        },
-        {
-            period: "Kỳ 7",
-            interest: 250414,
-            principal: 8465741,
-            total: 8716155,
-            remainingBalance: 41616993
-        },
-        {
-            period: "Kỳ 8",
-            interest: 208085,
-            principal: 8508070,
-            total: 8716155,
-            remainingBalance: 33108923
-        },
-        {
-            period: "Kỳ 9",
-            interest: 165545,
-            principal: 8550610,
-            total: 8716155,
-            remainingBalance: 24558313
-        },
-        {
-            period: "Kỳ 10",
-            interest: 122792,
-            principal: 8593363,
-            total: 8716155,
-            remainingBalance: 15964950
-        },
-        {
-            period: "Kỳ 11",
-            interest: 79825,
-            principal: 8636330,
-            total: 8716155,
-            remainingBalance: 7328620
-        },
-        {
-            period: "Kỳ 12",
-            interest: 36643,
-            principal: 8679512,
-            total: 8716155,
-            remainingBalance: 0
-        }
-    ]
+        data,
+    };
 };

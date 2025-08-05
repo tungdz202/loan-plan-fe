@@ -1,18 +1,17 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {LoanContract} from "../../types/common";
 import {getLoanContracts} from "../../service/LoanDetailService";
-
 
 const LoanTracking: React.FC = () => {
     const [contracts, setContracts] = useState<LoanContract[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [searchEmail, setSearchEmail] = useState<string>('');
+    const location = useLocation();
 
-    const handleSearch = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!searchEmail.trim()) {
+    const handleSearch = async (email: string) => {
+        if (!email.trim()) {
             setError('Vui lòng nhập email để tìm kiếm.');
             setContracts([]);
             return;
@@ -20,7 +19,7 @@ const LoanTracking: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
-            const data = await getLoanContracts(searchEmail);
+            const data = await getLoanContracts(email);
             setContracts(data);
         } catch (err: any) {
             setError(err.message);
@@ -30,13 +29,28 @@ const LoanTracking: React.FC = () => {
         }
     };
 
+    useEffect(() => {
+        const emailFromState = location.state?.email;
+        if (emailFromState) {
+            setSearchEmail(emailFromState);
+            handleSearch(emailFromState);
+        }
+    }, [location.state]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        handleSearch(searchEmail);
+    };
+
     return (
         <div className="container py-5">
             <h1 className="text-center mb-4">Theo dõi hợp đồng vay</h1>
-            <Link to="/" className="btn btn-primary mb-4">Quay lại trang chủ</Link>
-            <div className="card p-3 mb-4">
+            <div className="action-buttons">
+                <Link to="/" className="btn btn-secondary btn-custom">Quay lại trang chủ</Link>
+            </div>
+            <div className="card p-4 mb-4">
                 <h3 className="card-title mb-3">Tìm kiếm hợp đồng</h3>
-                <form onSubmit={handleSearch}>
+                <form onSubmit={handleSubmit}>
                     <div className="row g-3">
                         <div className="col-md-8">
                             <input
@@ -49,7 +63,7 @@ const LoanTracking: React.FC = () => {
                             />
                         </div>
                         <div className="col-md-4">
-                            <button type="submit" className="btn btn-primary w-100">Tìm kiếm</button>
+                            <button type="submit" className="btn btn-primary btn-custom w-100">Tìm kiếm</button>
                         </div>
                     </div>
                 </form>
@@ -60,7 +74,7 @@ const LoanTracking: React.FC = () => {
                 <div className="alert alert-warning">Vui lòng nhập email để xem danh sách hợp đồng.</div>
             )}
             {contracts.length > 0 && (
-                <div className="card p-3 mb-4">
+                <div className="card p-4 mb-4">
                     <h3 className="card-title mb-3">Danh sách hợp đồng</h3>
                     <table className="table table-bordered">
                         <thead>
@@ -80,7 +94,7 @@ const LoanTracking: React.FC = () => {
                                 <td>{contract.startDate}</td>
                                 <td>{contract.interestPeriod === 1 ? 'Hàng tháng' : contract.interestPeriod === 3 ? 'Hàng quý' : 'Hàng năm'}</td>
                                 <td>
-                                    <Link to={`/loan-tracking/${contract.id}`} className="btn btn-info btn-sm">
+                                    <Link to={`/loan-tracking/${contract.id}`} className="btn btn-primary btn-custom btn-sm">
                                         Xem chi tiết
                                     </Link>
                                 </td>
