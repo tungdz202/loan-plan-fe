@@ -16,7 +16,6 @@ code {
 :root {
   --primary-color: #1e40af; /* Xanh dương đậm */
   --secondary-color: #0ea5e9; /* Xanh lam */
-  --success-color: #22c55e; /* Xanh lá */
   --info-color: #0ea5e9; /* Xanh lam cho nút phụ */
   --danger-color: #ef4444; /* Đỏ */
   --border-radius: 12px;
@@ -27,7 +26,7 @@ code {
 
 body {
   font-family: var(--font-family);
-  background: linear-gradient(135deg, #1e3a8a 0%, #93c5fd 100%); /* Gradient đồng nhất */
+  background: linear-gradient(135deg, #1e3a8a 0%, #93c5fd 100%);
   min-height: 100vh;
   margin: 0;
   position: relative;
@@ -41,7 +40,7 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('https://images.unsplash.com/photo-1554224155-8d04cb21a74c?auto=format&fit=crop&q=80'); /* Hình nền tài chính trừu tượng */
+  background-image: url('https://images.unsplash.com/photo-1554224155-8d04cb21a74c?auto=format&fit=crop&q=80');
   background-size: cover;
   background-position: center;
   opacity: 0.05;
@@ -73,6 +72,53 @@ body::before {
   font-weight: 700;
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
+}
+
+/* Recommendation Card */
+.recommendation-card {
+  animation: fadeIn 0.5s ease;
+}
+
+.recommendation-card p {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.recommendation-card ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.recommendation-card li {
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.recommendation-card li::before {
+  content: '•';
+  color: var(--primary-color);
+  position: absolute;
+  left: 0;
+  font-size: 1.2rem;
+}
+
+/* Toast Notification */
+.alert-dismissible {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  min-width: 300px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 /* Tiêu đề trang */
@@ -202,8 +248,8 @@ h1 {
 }
 
 .status-checkbox input:checked {
-  background-color: var(--success-color);
-  border-color: var(--success-color);
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 .status-checkbox input:checked::after {
@@ -336,5 +382,9 @@ h1 {
 
   .contract-info p strong {
     flex: none;
+  }
+
+  .recommendation-card {
+    font-size: 0.9rem;
   }
 }
